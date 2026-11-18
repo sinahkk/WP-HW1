@@ -716,6 +716,7 @@ function showEmpty(message) {
     app.appendChild(box);
 }
 
+
 function renderBookDetail() {
     const id = params.get("id");
     const book = allBooks.find(item => item.id === id);
@@ -728,9 +729,14 @@ function renderBookDetail() {
             )
         );
 
-        showEmpty("کتاب موردنظر در مجموعه وجود ندارد.");
+        showEmpty("کتاب موردنظر پیدا نشد.");
         return;
     }
+
+    const heading = createPageHeading(
+        "جزئیات کتاب",
+        book.category
+    );
 
     const layout = createElement("article", "book-detail");
 
@@ -740,55 +746,257 @@ function renderBookDetail() {
 
     const info = createElement("div", "detail-info");
 
+    const category = createElement(
+        "span",
+        "book-category",
+        book.category
+    );
+
+    const title = createElement("h1", "", book.title);
+
+    const author = createElement(
+        "p",
+        "",
+        "نویسنده: " + book.author
+    );
+
+    const rating = createElement(
+        "p",
+        "",
+        "امتیاز: " + book.rating.toLocaleString("fa-IR") + " از ۵"
+    );
+
     const priceText = book.price === 0
         ? "رایگان"
         : book.price.toLocaleString("fa-IR") + " تومان";
 
-    const action = createElement("div", "detail-action");
-    action.appendChild(createFavoriteButton(book));
+    const price = createElement(
+        "p",
+        "",
+        "قیمت: " + priceText
+    );
+
+    const description = createElement(
+        "p",
+        "detail-description",
+        book.description
+    );
+
+    const actions = createElement("div", "detail-actions");
+
+    const favoriteButton = createFavoriteButton(book);
+
+    const downloadButton = createElement(
+        "button",
+        "purchase-btn"
+    );
+
+    downloadButton.type = "button";
+
+    const message = createElement("p", "detail-message");
+    message.setAttribute("role", "status");
+
+    function updateDownloadButton() {
+        const isDownloaded = state.library.includes(book.id);
+
+        if (isDownloaded) {
+            downloadButton.textContent = "در کتابخانه من";
+            downloadButton.disabled = true;
+        } else if (book.price === 0) {
+            downloadButton.textContent = "دریافت رایگان";
+            downloadButton.disabled = false;
+        } else {
+            downloadButton.textContent = "خرید کتاب";
+            downloadButton.disabled = false;
+        }
+    }
+
+    downloadButton.addEventListener("click", function() {
+        if (state.library.includes(book.id)) {
+            return;
+        }
+
+        if (book.price > 0) {
+            const confirmed = window.confirm(
+                "آیا از خرید نمایشی کتاب «" +
+                book.title +
+                "» به قیمت " +
+                priceText +
+                " مطمئن هستید؟"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        if (addToLibrary(book.id)) {
+            updateDownloadButton();
+
+            message.textContent = book.price === 0
+                ? "کتاب با موفقیت به کتابخانه اضافه شد."
+                : "خرید نمایشی انجام شد و کتاب به کتابخانه اضافه شد.";
+        } else {
+            message.textContent =
+                "امکان ذخیره کتاب وجود ندارد. دوباره تلاش کنید.";
+        }
+    });
+
+    const hasSample = Array.isArray(book.sample) &&
+        book.sample.length > 0;
+
+    let sampleControl;
+
+    if (hasSample) {
+        sampleControl = createLink(
+            "مطالعه نمونه کتاب",
+            "index.html?view=sample&id=" +
+                encodeURIComponent(book.id),
+            "sample-link"
+        );
+    } else {
+        sampleControl = createElement(
+            "button",
+            "sample-link",
+            "نمونه مطالعه موجود نیست"
+        );
+
+        sampleControl.type = "button";
+        sampleControl.disabled = true;
+        sampleControl.title = "این کتاب نمونه مطالعه ندارد";
+    }
+
+    const note = createElement(
+        "p",
+        "detail-note",
+        "خرید و دریافت کتاب در این پروژه فقط به صورت نمایشی انجام می‌شود."
+    );
+
+    actions.append(
+        favoriteButton,
+        downloadButton,
+        sampleControl,
+        message
+    );
 
     info.append(
-        createElement(
-            "span",
-            "book-category",
-            book.category
-        ),
-        createElement("h1", "", book.title),
-        createElement(
-            "p",
-            "",
-            "نویسنده: " + book.author
-        ),
-        createElement(
-            "p",
-            "",
-            "امتیاز: " +
-            book.rating.toLocaleString("fa-IR") +
-            " از ۵"
-        ),
-        createElement(
-            "p",
-            "",
-            "قیمت: " + priceText
-        ),
-        createElement(
-            "p",
-            "detail-description",
-            book.description
-        ),
-        action
+        category,
+        title,
+        author,
+        rating,
+        price,
+        description,
+        actions,
+        note
     );
 
     layout.append(cover, info);
 
-    app.append(
-        createPageHeading(
-            "جزئیات کتاب",
-            "اطلاعات کتاب انتخاب‌شده"
-        ),
-        layout
+    const relatedBooks = allBooks
+        .filter(item =>
+            item.category === book.category &&
+            item.id !== book.id
+        )
+        .slice(0, 3);
+
+    const relatedSection = createElement(
+        "section",
+        "related-section"
     );
+
+    relatedSection.appendChild(
+        createSectionHeading(
+            "کتاب‌های مرتبط",
+            "کتاب‌های دیگری از همین دسته‌بندی",
+            listUrl({ category: book.category })
+        )
+    );
+
+    if (relatedBooks.length > 0) {
+        relatedSection.appendChild(createBookGrid(relatedBooks));
+    }
+
+    app.append(heading, layout, relatedSection);
+
+    updateDownloadButton();
 }
+
+
+function renderSample() {
+    const id = params.get("id");
+    const book = allBooks.find(item => item.id === id);
+
+    if (!book) {
+        app.appendChild(
+            createPageHeading(
+                "کتاب یافت نشد",
+                "شناسه کتاب معتبر نیست."
+            )
+        );
+
+        showEmpty("کتاب موردنظر پیدا نشد.");
+        return;
+    }
+
+    const heading = createElement("div", "page-heading");
+
+    heading.append(
+        createLink(
+            "بازگشت به جزئیات کتاب",
+            bookUrl(book.id),
+            "back-link"
+        ),
+        createElement(
+            "h1",
+            "",
+            "نمونه مطالعه: " + book.title
+        ),
+        createElement(
+            "p",
+            "",
+            "نویسنده: " + book.author
+        )
+    );
+
+    app.appendChild(heading);
+
+    if (!Array.isArray(book.sample) || book.sample.length === 0) {
+        const empty = createElement("div", "empty-state");
+
+        empty.append(
+            createElement(
+                "p",
+                "",
+                "برای این کتاب نمونه مطالعه موجود نیست."
+            ),
+            createLink(
+                "بازگشت به جزئیات کتاب",
+                bookUrl(book.id)
+            )
+        );
+
+        app.appendChild(empty);
+        return;
+    }
+
+    const reader = createElement("article", "sample-reader");
+
+    for (const paragraph of book.sample) {
+        reader.appendChild(
+            createElement("p", "", paragraph)
+        );
+    }
+
+    const backLink = createLink(
+        "بازگشت به جزئیات کتاب",
+        bookUrl(book.id),
+        "sample-back"
+    );
+
+    app.append(reader, backLink);
+}
+
+
 
 function renderLibrary() {
     app.appendChild(
@@ -907,6 +1115,7 @@ searchForm.addEventListener("submit", function(event) {
 });
 }
 
+
 function renderPage() {
     app.replaceChildren();
 
@@ -916,6 +1125,8 @@ function renderPage() {
         renderList();
     } else if (view === "book") {
         renderBookDetail();
+    } else if (view === "sample") {
+        renderSample();
     } else if (view === "library") {
         renderLibrary();
     } else if (view === "account") {
@@ -924,6 +1135,7 @@ function renderPage() {
         renderHome();
     }
 }
+
 
 renderHeader();
 renderPage();

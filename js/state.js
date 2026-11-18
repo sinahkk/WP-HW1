@@ -116,6 +116,28 @@ function toggleFavorite(bookId) {
     return true;
 }
 
+function addToLibrary(bookId) {
+    const bookExists = window.bookCatalog.some(function(book) {
+        return book.id === bookId;
+    });
+
+    if (!bookExists) {
+        return false;
+    }
+
+    if (state.library.includes(bookId)) {
+        return true;
+    }
+
+    state.library.push(bookId);
+
+    if (!saveState()) {
+        state.library.pop();
+        return false;
+    }
+
+    return true;
+}
 
 
 
