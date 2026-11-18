@@ -952,18 +952,15 @@ function renderBookDetail() {
 }
 
 
+
 function renderSample() {
     const id = params.get("id");
     const book = allBooks.find(item => item.id === id);
 
     if (!book) {
         app.appendChild(
-            createPageHeading(
-                "کتاب یافت نشد",
-                "شناسه کتاب معتبر نیست."
-            )
+            createPageHeading("کتاب یافت نشد", "شناسه کتاب معتبر نیست.")
         );
-
         showEmpty("کتاب موردنظر پیدا نشد.");
         return;
     }
@@ -971,21 +968,9 @@ function renderSample() {
     const heading = createElement("div", "page-heading");
 
     heading.append(
-        createLink(
-            "بازگشت به جزئیات کتاب",
-            bookUrl(book.id),
-            "back-link"
-        ),
-        createElement(
-            "h1",
-            "",
-            "نمونه مطالعه: " + book.title
-        ),
-        createElement(
-            "p",
-            "",
-            "نویسنده: " + book.author
-        )
+        createLink("بازگشت به جزئیات کتاب", bookUrl(book.id), "back-link"),
+        createElement("h1", "", "نمونه مطالعه: " + book.title),
+        createElement("p", "", "نویسنده: " + book.author)
     );
 
     app.appendChild(heading);
@@ -994,37 +979,135 @@ function renderSample() {
         const empty = createElement("div", "empty-state");
 
         empty.append(
-            createElement(
-                "p",
-                "",
-                "برای این کتاب نمونه مطالعه موجود نیست."
-            ),
-            createLink(
-                "بازگشت به جزئیات کتاب",
-                bookUrl(book.id)
-            )
+            createElement("p", "", "برای این کتاب نمونه مطالعه موجود نیست."),
+            createLink("بازگشت به جزئیات کتاب", bookUrl(book.id))
         );
 
         app.appendChild(empty);
         return;
     }
 
+    const section = createElement("section", "reader-section");
+    const toolbar = createElement("div", "reader-toolbar");
+    const fontGroup = createElement("div", "reader-control-group");
+    const themeGroup = createElement("div", "reader-control-group");
+    const status = createElement("p", "reader-message");
     const reader = createElement("article", "sample-reader");
+    const fontButtons = [];
+    const themeButtons = [];
 
-    for (const paragraph of book.sample) {
-        reader.appendChild(
-            createElement("p", "", paragraph)
-        );
-    }
+    fontGroup.setAttribute("role", "group");
+    fontGroup.setAttribute("aria-label", "اندازه قلم");
 
-    const backLink = createLink(
-        "بازگشت به جزئیات کتاب",
-        bookUrl(book.id),
-        "sample-back"
+    themeGroup.setAttribute("role", "group");
+    themeGroup.setAttribute("aria-label", "تم مطالعه");
+
+    status.setAttribute("role", "status");
+    reader.setAttribute("aria-label", "نمونه متن کتاب " + book.title);
+
+    fontGroup.appendChild(
+        createElement("span", "reader-control-label", "اندازه قلم")
     );
 
-    app.append(reader, backLink);
+    themeGroup.appendChild(
+        createElement("span", "reader-control-label", "تم مطالعه")
+    );
+
+    function applyReadingSettings() {
+        reader.dataset.fontSize = state.readingSettings.fontSize;
+        reader.dataset.theme = state.readingSettings.theme;
+
+        for (const button of fontButtons) {
+            const active =
+                button.dataset.value === state.readingSettings.fontSize;
+
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", String(active));
+        }
+
+        for (const button of themeButtons) {
+            const active =
+                button.dataset.value === state.readingSettings.theme;
+
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", String(active));
+        }
+    }
+
+    const fontOptions = [
+        { value: "small", label: "کوچک" },
+        { value: "medium", label: "متوسط" },
+        { value: "large", label: "بزرگ" }
+    ];
+
+    for (const option of fontOptions) {
+        const button = createElement("button", "reader-option", option.label);
+        button.type = "button";
+        button.dataset.value = option.value;
+
+        button.addEventListener("click", function() {
+            const previous = state.readingSettings.fontSize;
+            state.readingSettings.fontSize = option.value;
+
+            if (!saveState()) {
+                state.readingSettings.fontSize = previous;
+                status.textContent = "تنظیمات ذخیره نشد. دوباره تلاش کنید.";
+                return;
+            }
+
+            applyReadingSettings();
+            status.textContent = "اندازه قلم ذخیره شد.";
+        });
+
+        fontGroup.appendChild(button);
+        fontButtons.push(button);
+    }
+
+    const themeOptions = [
+        { value: "light", label: "روشن" },
+        { value: "dark", label: "تیره" }
+    ];
+
+    for (const option of themeOptions) {
+        const button = createElement("button", "reader-option", option.label);
+        button.type = "button";
+        button.dataset.value = option.value;
+
+        button.addEventListener("click", function() {
+            const previous = state.readingSettings.theme;
+            state.readingSettings.theme = option.value;
+
+            if (!saveState()) {
+                state.readingSettings.theme = previous;
+                status.textContent = "تنظیمات ذخیره نشد. دوباره تلاش کنید.";
+                return;
+            }
+
+            applyReadingSettings();
+            status.textContent = "تم مطالعه ذخیره شد.";
+        });
+
+        themeGroup.appendChild(button);
+        themeButtons.push(button);
+    }
+
+    for (const paragraph of book.sample) {
+        reader.appendChild(createElement("p", "", paragraph));
+    }
+
+    toolbar.append(fontGroup, themeGroup);
+
+    section.append(
+        toolbar,
+        status,
+        reader,
+        createLink("بازگشت به جزئیات کتاب", bookUrl(book.id), "sample-back")
+    );
+
+    app.appendChild(section);
+    applyReadingSettings();
 }
+
 
 
 

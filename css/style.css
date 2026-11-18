@@ -1036,6 +1036,160 @@ a:focus-visible, button:focus-visible, input:focus-visible {
     }
 }
 
+.reader-section {
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.reader-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.reader-control-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.reader-control-label {
+    margin-left: 6px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.reader-option {
+    min-width: 65px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: white;
+    color: var(--text);
+    font-size: 13px;
+}
+
+.reader-option:hover {
+    background: var(--primary-light);
+}
+
+.reader-option.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.reader-option.active:hover {
+    background: var(--primary-dark);
+}
+
+.reader-message {
+    min-height: 20px;
+    margin: 10px 0;
+    color: var(--primary);
+    font-size: 12px;
+}
+
+.reader-section .sample-reader {
+    overflow-wrap: anywhere;
+}
+
+.reader-section .sample-reader[data-theme="light"] {
+    background: #ffffff;
+    color: #1c2826;
+    border-color: #e0e7e3;
+}
+
+.reader-section .sample-reader[data-theme="dark"] {
+    background: #202b2a;
+    color: #f3f5f4;
+    border-color: #465955;
+}
+
+.reader-section .sample-reader p {
+    color: inherit;
+}
+
+.reader-section .sample-reader[data-font-size="small"] p {
+    font-size: 15px;
+    line-height: 2.2;
+}
+
+.reader-section .sample-reader[data-font-size="medium"] p {
+    font-size: 17px;
+    line-height: 2.3;
+}
+
+.reader-section .sample-reader[data-font-size="large"] p {
+    font-size: 21px;
+    line-height: 2.3;
+}
+
+.search-form:focus-within {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.book-carousel:focus-visible,
+.reader-option:focus-visible,
+.filter-control:focus-visible,
+.account-input:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+.book-title,
+.book-author,
+.detail-info {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+    .section-heading {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .section-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .reader-toolbar {
+        padding: 12px;
+        gap: 14px;
+    }
+
+    .reader-control-group {
+        width: 100%;
+    }
+
+    .reader-option {
+        flex: 1;
+        min-width: 0;
+        padding: 8px;
+    }
+
+    .reader-section .sample-reader {
+        padding: 18px;
+    }
+}
+
+@media (max-width: 640px) {
+    .reader-section .sample-reader p {
+        text-align: right;
+    }
+}
+
+
+
 
 
 
