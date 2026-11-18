@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کتاب‌نما | دنیای کتاب‌ها</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/books.js" defer></script>
+    <script src="js/state.js" defer></script>
+    <script src="js/app.js" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-main">
+            <a class="brand" href="index.html" aria-label="کتاب‌نما، صفحه اصلی">
+                <span class="brand-icon" aria-hidden="true">✦</span>
+                <span>کتاب‌نما</span>
+            </a>
+
+            <form id="search-form" class="search-form" role="search">
+                <label for="search-input" class="visually-hidden">جستجو در کتاب‌ها</label>
+                <input
+                    id="search-input"
+                    type="search"
+                    placeholder="نام کتاب یا نویسنده را جستجو کنید"
+                    autocomplete="off"
+                >
+                <button type="submit">جستجو</button>
+            </form>
+
+            <nav class="header-links" aria-label="منوی اصلی">
+                <a href="index.html?view=list">کتاب‌ها</a>
+                <a href="index.html?view=library">
+                    کتابخانه
+                    <span id="favorite-count" class="nav-count">۰</span>
+                </a>
+                <a href="index.html?view=account">حساب من</a>
+            </nav>
+        </div>
+
+        <div class="category-bar">
+            <nav
+                id="category-nav"
+                class="container category-nav"
+                aria-label="دسته‌بندی کتاب‌ها"
+            ></nav>
+        </div>
+    </header>
+
+    <main id="app" class="container"></main>
+
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <strong>کتاب‌نما</strong>
+        </div>
+    </footer>
+</body>
+</html>
