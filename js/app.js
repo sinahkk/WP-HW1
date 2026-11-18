@@ -41,35 +41,47 @@ function updateFavoriteCount() {
         state.favorites.length.toLocaleString("fa-IR");
 }
 
+
+function updateFavoriteButton(button) {
+    const bookId = button.dataset.bookId;
+    const isFavorite = state.favorites.includes(bookId);
+
+    button.textContent = isFavorite
+        ? "♥ حذف از علاقه‌مندی‌ها"
+        : "♡ افزودن به علاقه‌مندی‌ها";
+
+    button.classList.toggle("active", isFavorite);
+    button.setAttribute("aria-pressed", String(isFavorite));
+}
+
 function createFavoriteButton(book) {
     const button = createElement("button", "favorite-btn");
     button.type = "button";
+    button.dataset.bookId = book.id;
 
-    function updateButton() {
-        const active = state.favorites.includes(book.id);
+    updateFavoriteButton(button);
 
-        button.textContent = active
-            ? "♥ حذف از علاقه‌مندی‌ها"
-            : "♡ افزودن به علاقه‌مندی‌ها";
+    button.addEventListener("click", function() {
+        if (!toggleFavorite(book.id)) {
+            return;
+        }
 
-        button.classList.toggle("active", active);
-        button.setAttribute("aria-pressed", String(active));
-    }
+        updateFavoriteCount();
 
-    button.addEventListener("click", function () {
-        if (toggleFavorite(book.id)) {
-            updateButton();
-            updateFavoriteCount();
+        if (params.get("view") === "library") {
+            renderPage();
+        } else {
+            const buttons = app.querySelectorAll(".favorite-btn");
 
-            if (params.get("view") === "library") {
-                renderPage();
+            for (const item of buttons) {
+                updateFavoriteButton(item);
             }
         }
     });
 
-    updateButton();
     return button;
 }
+
 
 function createBookCard(book) {
     const card = createElement("article", "book-card");
@@ -796,12 +808,19 @@ function renderBookDetail() {
     const message = createElement("p", "detail-message");
     message.setAttribute("role", "status");
 
+    
     function updateDownloadButton() {
         const isDownloaded = state.library.includes(book.id);
 
         if (isDownloaded) {
             downloadButton.textContent = "در کتابخانه من";
             downloadButton.disabled = true;
+        } else if (!state.user) {
+            downloadButton.textContent = book.price === 0
+                ? "ورود برای دریافت رایگان"
+                : "ورود برای خرید کتاب";
+
+            downloadButton.disabled = false;
         } else if (book.price === 0) {
             downloadButton.textContent = "دریافت رایگان";
             downloadButton.disabled = false;
@@ -809,12 +828,23 @@ function renderBookDetail() {
             downloadButton.textContent = "خرید کتاب";
             downloadButton.disabled = false;
         }
-    }
+}
 
+
+    
     downloadButton.addEventListener("click", function() {
         if (state.library.includes(book.id)) {
             return;
         }
+
+        if (!state.user) {
+            window.location.href =
+                "index.html?view=account&bookId=" +
+                encodeURIComponent(book.id);
+
+            return;
+        }
+
 
         if (book.price > 0) {
             const confirmed = window.confirm(
@@ -1047,20 +1077,206 @@ function renderLibrary() {
     }
 }
 
+function normalizePhoneNumber(value) {
+    return value.trim()
+        .replace(/[۰-۹]/g, digit =>
+            String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit))
+        )
+        .replace(/[٠-٩]/g, digit =>
+            String("٠١٢٣٤٥٦٧٨٩".indexOf(digit))
+        );
+}
+
+
 function renderAccount() {
     app.appendChild(
         createPageHeading(
             "حساب من",
-            "حساب نمایشی کتاب‌نما"
+            "ورود نمایشی به کتاب‌نما"
         )
     );
 
-    const message = state.user
-        ? "کاربر فعلی: " + state.user.name
-        : "فرم ورود نمایشی در گام ششم به این صفحه اضافه می‌شود.";
+    const panel = createElement("section", "account-panel");
 
-    showEmpty(message);
+    if (state.user) {
+        panel.append(
+            createElement(
+                "h2",
+                "",
+                "خوش آمدید، " + state.user.name
+            ),
+            createElement(
+                "p",
+                "account-note",
+                "شما وارد حساب نمایشی خود شده‌اید. برای خروج از گزینه خروج در سربرگ استفاده کنید."
+            )
+        );
+
+        app.appendChild(panel);
+        return;
+    }
+
+    const form = createElement("form", "account-form");
+    form.noValidate = true;
+
+    const nameField = createElement("div", "form-field");
+
+    const nameLabel = createElement(
+        "label",
+        "",
+        "نام نمایشی"
+    );
+    nameLabel.htmlFor = "display-name";
+
+    const nameInput = createElement("input", "account-input");
+    nameInput.id = "display-name";
+    nameInput.type = "text";
+    nameInput.maxLength = 60;
+    nameInput.placeholder = "نام خود را وارد کنید";
+    nameInput.required = true;
+    nameInput.setAttribute(
+        "aria-describedby",
+        "display-name-error"
+    );
+
+    const nameError = createElement("small", "field-error");
+    nameError.id = "display-name-error";
+
+    nameField.append(nameLabel, nameInput, nameError);
+
+    const phoneField = createElement("div", "form-field");
+
+    const phoneLabel = createElement(
+        "label",
+        "",
+        "شماره موبایل"
+    );
+    phoneLabel.htmlFor = "phone-number";
+
+    const phoneInput = createElement("input", "account-input");
+    phoneInput.id = "phone-number";
+    phoneInput.type = "tel";
+    phoneInput.inputMode = "numeric";
+    phoneInput.dir = "ltr";
+    phoneInput.maxLength = 11;
+    phoneInput.placeholder = "09xxxxxxxxx";
+    phoneInput.autocomplete = "off";
+    phoneInput.required = true;
+    phoneInput.setAttribute(
+        "aria-describedby",
+        "phone-number-error"
+    );
+
+    const phoneError = createElement("small", "field-error");
+    phoneError.id = "phone-number-error";
+
+    phoneField.append(phoneLabel, phoneInput, phoneError);
+
+    const submitButton = createElement(
+        "button",
+        "login-btn",
+        "ورود"
+    );
+    submitButton.type = "submit";
+
+    const status = createElement("p", "login-status");
+    status.setAttribute("role", "status");
+
+    const note = createElement(
+        "p",
+        "account-note",
+        "این ورود فقط نمایشی است. از شماره واقعی استفاده نکنید. شماره موبایل ذخیره نمی‌شود."
+    );
+
+    form.append(
+        nameField,
+        phoneField,
+        submitButton,
+        status
+    );
+
+    form.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const name = nameInput.value.trim();
+        const phone = normalizePhoneNumber(phoneInput.value);
+
+        let isValid = true;
+
+        nameError.textContent = "";
+        phoneError.textContent = "";
+        status.textContent = "";
+
+        if (name === "") {
+            nameError.textContent =
+                "نام نمایشی نمی‌تواند خالی باشد.";
+
+            nameInput.setAttribute("aria-invalid", "true");
+            isValid = false;
+        } else {
+            nameInput.removeAttribute("aria-invalid");
+        }
+
+        if (!/^09[0-9]{9}$/.test(phone)) {
+            phoneError.textContent =
+                "شماره موبایل باید ۱۱ رقم باشد و با ۰۹ شروع شود.";
+
+            phoneInput.setAttribute("aria-invalid", "true");
+            isValid = false;
+        } else {
+            phoneInput.removeAttribute("aria-invalid");
+        }
+
+        if (!isValid) {
+            return;
+        }
+
+        if (!loginUser(name, phone)) {
+            status.textContent =
+                "امکان ذخیره اطلاعات وجود ندارد.";
+            return;
+        }
+
+        
+        updateHeaderUser();
+        updateFavoriteCount();
+
+        const requestedBookId = params.get("bookId");
+
+
+        const validBook = allBooks.some(
+            book => book.id === requestedBookId
+        );
+
+        if (requestedBookId && validBook) {
+            window.location.href = bookUrl(requestedBookId);
+        } else {
+            renderPage();
+        }
+    });
+
+    panel.append(
+        createElement("h2", "", "ورود به حساب"),
+        note,
+        form
+    );
+
+    app.appendChild(panel);
 }
+
+function updateHeaderUser() {
+    const accountLink = document.getElementById("account-link");
+    const logoutButton = document.getElementById("logout-button");
+
+    if (state.user) {
+        accountLink.textContent = state.user.name;
+        logoutButton.hidden = false;
+    } else {
+        accountLink.textContent = "حساب من";
+        logoutButton.hidden = true;
+    }
+}
+
 
 function renderHeader() {
     const categories = [
@@ -1086,34 +1302,53 @@ function renderHeader() {
 
     searchInput.value = params.get("q") || "";
 
-    
-searchForm.addEventListener("submit", function(event) {
-    event.preventDefault();
+    searchForm.addEventListener("submit", function(event) {
+        event.preventDefault();
 
-    const query = searchInput.value.trim();
-    const currentParams = new URLSearchParams(
-        window.location.search
-    );
+        const query = searchInput.value.trim();
 
-    const options = {};
+        const currentParams = new URLSearchParams(
+            window.location.search
+        );
 
-    if (currentParams.get("view") === "list") {
-        for (const key of ["section", "category", "free", "sort"]) {
-            const value = currentParams.get(key);
+        const options = {};
 
-            if (value) {
-                options[key] = value;
+        if (currentParams.get("view") === "list") {
+            for (const key of ["section", "category", "free", "sort"]) {
+                const value = currentParams.get(key);
+
+                if (value) {
+                    options[key] = value;
+                }
             }
         }
-    }
 
-    if (query) {
-        options.q = query;
-    }
+        if (query) {
+            options.q = query;
+        }
 
-    window.location.href = listUrl(options);
-});
+        window.location.href = listUrl(options);
+    });
+
+    const logoutButton = document.getElementById("logout-button");
+
+    logoutButton.addEventListener("click", function() {
+        if (!logoutUser()) {
+            window.alert("خروج از حساب انجام نشد.");
+            return;
+        }
+
+        
+        updateHeaderUser();
+        updateFavoriteCount();
+        renderPage();
+
+    });
+
+    updateHeaderUser();
+    updateFavoriteCount();
 }
+
 
 
 function renderPage() {

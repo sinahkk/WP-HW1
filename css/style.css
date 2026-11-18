@@ -915,5 +915,127 @@ a:focus-visible, button:focus-visible, input:focus-visible {
     }
 }
 
+.logout-btn {
+    padding: 6px 12px;
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 7px;
+    font-size: 12px;
+}
+
+.logout-btn:hover {
+    background: var(--primary-light);
+}
+
+.logout-btn[hidden] {
+    display: none;
+}
+
+#account-link {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.account-panel {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+}
+
+.account-panel h2 {
+    margin: 0 0 15px;
+    font-size: 21px;
+}
+
+.account-note {
+    margin: 0 0 24px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-field label {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.account-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.account-input:focus {
+    border-color: var(--primary);
+}
+
+.account-input[aria-invalid="true"] {
+    border-color: #c0392b;
+}
+
+.field-error {
+    min-height: 18px;
+    color: #c0392b;
+    font-size: 12px;
+}
+
+.login-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.login-btn:hover {
+    background: var(--primary-dark);
+}
+
+.login-status {
+    margin: 0;
+    color: #c0392b;
+    font-size: 13px;
+}
+
+@media (max-width: 640px) {
+    .account-panel {
+        padding: 20px;
+    }
+
+    .header-links {
+        flex-wrap: wrap;
+    }
+
+    #account-link {
+        max-width: 100px;
+    }
+}
+
+
 
 

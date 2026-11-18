@@ -1,5 +1,7 @@
 
-const STORAGE_KEY = "ketabnama-state-v1";
+const SESSION_KEY = "ketabnama-session-v1";
+const GUEST_KEY = "ketabnama-guest-v1";
+const ACCOUNT_PREFIX = "ketabnama-account-v1-";
 
 function getDefaultState() {
     return {
@@ -20,9 +22,7 @@ function getValidBookIds(ids) {
 
     const validIds = [];
 
-    for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-
+    for (const id of ids) {
         const exists = window.bookCatalog.some(function(book) {
             return book.id === id;
         });
@@ -35,13 +35,13 @@ function getValidBookIds(ids) {
     return validIds;
 }
 
-function loadState() {
+function getStoredState(key) {
     const initialState = getDefaultState();
 
     try {
-        const savedData = localStorage.getItem(STORAGE_KEY);
+        const savedData = localStorage.getItem(key);
 
-        if (savedData === null) {
+        if (!savedData) {
             return initialState;
         }
 
@@ -55,18 +55,11 @@ function loadState() {
         initialState.favorites = getValidBookIds(saved.favorites);
         initialState.library = getValidBookIds(saved.library);
 
-        if (saved.user &&
-            typeof saved.user.name === "string" &&
-            saved.user.name.trim() !== "") {
-
-            initialState.user = {
-                name: saved.user.name.trim()
-            };
-        }
-
         const settings = saved.readingSettings;
 
-        if (settings && typeof settings === "object") {
+        if (settings && typeof settings === "object" &&
+            !Array.isArray(settings)) {
+
             if (["small", "medium", "large"].includes(settings.fontSize)) {
                 initialState.readingSettings.fontSize = settings.fontSize;
             }
@@ -75,7 +68,6 @@ function loadState() {
                 initialState.readingSettings.theme = settings.theme;
             }
         }
-
     } catch (error) {
         console.warn("خطا در خواندن اطلاعات ذخیره‌شده:", error);
     }
@@ -83,16 +75,135 @@ function loadState() {
     return initialState;
 }
 
+function getSavedUser() {
+    try {
+        const savedData = localStorage.getItem(SESSION_KEY);
+
+        if (!savedData) {
+            return null;
+        }
+
+        const user = JSON.parse(savedData);
+
+        if (user &&
+            typeof user.id === "string" &&
+            /^account-[a-f0-9]{16}$/.test(user.id) &&
+            typeof user.name === "string" &&
+            user.name.trim() !== "") {
+
+            return {
+                id: user.id,
+                name: user.name.trim()
+            };
+        }
+    } catch (error) {
+        console.warn("خطا در خواندن حساب کاربری:", error);
+    }
+
+    return null;
+}
+
+function loadState() {
+    const user = getSavedUser();
+
+    const key = user
+        ? ACCOUNT_PREFIX + user.id
+        : GUEST_KEY;
+
+    const savedState = getStoredState(key);
+    savedState.user = user;
+
+    return savedState;
+}
+
 const state = loadState();
 
 function saveState() {
+    const key = state.user
+        ? ACCOUNT_PREFIX + state.user.id
+        : GUEST_KEY;
+
+    const data = {
+        favorites: state.favorites,
+        library: state.library,
+        readingSettings: state.readingSettings
+    };
+
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(key, JSON.stringify(data));
         return true;
     } catch (error) {
         console.warn("خطا در ذخیره اطلاعات:", error);
         return false;
     }
+}
+
+function createAccountId(phone) {
+    let first = 2166136261;
+    let second = 5381;
+
+    for (let i = 0; i < phone.length; i++) {
+        const code = phone.charCodeAt(i);
+
+        first = Math.imul(first ^ code, 16777619) >>> 0;
+        second = (Math.imul(second, 33) ^ code) >>> 0;
+    }
+
+    return "account-" +
+        first.toString(16).padStart(8, "0") +
+        second.toString(16).padStart(8, "0");
+}
+
+function loginUser(name, phone) {
+    if (typeof name !== "string" ||
+        typeof phone !== "string") {
+        return false;
+    }
+
+    const displayName = name.trim();
+
+    if (displayName === "" || !/^09[0-9]{9}$/.test(phone)) {
+        return false;
+    }
+
+    const user = {
+        id: createAccountId(phone),
+        name: displayName
+    };
+
+    const userState = getStoredState(ACCOUNT_PREFIX + user.id);
+
+    try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    } catch (error) {
+        console.warn("خطا در ورود به حساب:", error);
+        return false;
+    }
+
+    state.user = user;
+    state.favorites = userState.favorites;
+    state.library = userState.library;
+    state.readingSettings = userState.readingSettings;
+
+    return true;
+}
+
+function logoutUser() {
+    try {
+        localStorage.removeItem(SESSION_KEY);
+    } catch (error) {
+        console.warn("خطا در خروج از حساب:", error);
+        return false;
+    }
+
+    const guestState = getStoredState(GUEST_KEY);
+
+    state.user = null;
+    state.favorites = guestState.favorites;
+    state.library = guestState.library;
+    state.readingSettings = guestState.readingSettings;
+
+    return true;
 }
 
 function toggleFavorite(bookId) {
@@ -112,16 +223,29 @@ function toggleFavorite(bookId) {
         state.favorites.splice(index, 1);
     }
 
-    saveState();
+    if (!saveState()) {
+        if (index === -1) {
+            state.favorites.pop();
+        } else {
+            state.favorites.splice(index, 0, bookId);
+        }
+
+        return false;
+    }
+
     return true;
 }
 
 function addToLibrary(bookId) {
-    const bookExists = window.bookCatalog.some(function(book) {
+    if (!state.user) {
+        return false;
+    }
+
+    const exists = window.bookCatalog.some(function(book) {
         return book.id === bookId;
     });
 
-    if (!bookExists) {
+    if (!exists) {
         return false;
     }
 
@@ -138,6 +262,3 @@ function addToLibrary(bookId) {
 
     return true;
 }
-
-
-
