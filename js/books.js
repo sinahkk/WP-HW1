@@ -1,11 +1,4 @@
 
-/*
-    اطلاعات کتاب‌های پروژه کتاب‌نما
-    منابع اصلی: Project Gutenberg
-    قیمت‌ها و امتیازها: آزمایشی
-    نمونه متن‌ها: بازآفرینی آموزشی
-*/
-
 const books = [
     {
         id: "pride-prejudice",
@@ -169,10 +162,6 @@ const books = [
 ];
 
 
-/*
-    تولید جلد اختصاصی برای هر کتاب
-    با استفاده از SVG داخلی، بدون فایل خارجی
-*/
 
 function escapeSvgText(text) {
     return String(text)
@@ -257,11 +246,39 @@ function createBookCover(book) {
 }
 
 
-// تکمیل اطلاعات کتاب‌ها با جلد و لینک منبع
 window.bookCatalog = books.map(function (book) {
     return {
         ...book,
         cover: createBookCover(book),
         source: "https://www.gutenberg.org/ebooks/" + book.gutenbergId
     };
+});
+
+const coverFileNames = {
+    "pride-prejudice": "pride-prejudice.png",
+    "emma": "emma.jpg",
+    "jane-eyre": "jane-eyre.jpg",
+    "great-expectations": "great-expectations.jpg",
+    "sherlock-holmes": "sherlock-holmes.jpg",
+    "baskervilles": "baskervilles.jpg",
+    "treasure-island": "treasure-island.jpg",
+    "around-world": "around-world.jpg",
+    "alice-wonderland": "alice-wonderland.jpg",
+    "wizard-oz": "wizard-oz.jpg",
+    "time-machine": "time-machine.jpg",
+    "war-worlds": "war-worlds.jpg"
+};
+
+window.bookCatalog.forEach(function(book) {
+    const fileName = coverFileNames[book.id];
+
+    if (!fileName) {
+        return;
+    }
+
+    if (!book.fallbackCover) {
+        book.fallbackCover = book.cover;
+    }
+
+    book.cover = "assets/covers/" + fileName;
 });

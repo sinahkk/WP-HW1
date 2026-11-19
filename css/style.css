@@ -1188,6 +1188,54 @@ a:focus-visible, button:focus-visible, input:focus-visible {
     }
 }
 
+.book-card {
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .book-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        z-index: 2;
+    }
+}
+
+.book-card:focus-within {
+    border-color: var(--primary);
+}
+
+.book-carousel {
+    padding: 12px 8px 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .book-card {
+        transition: none;
+    }
+}
+
+.book-card {
+    position: relative;
+}
+
+.free-book-badge {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 3;
+    padding: 3px 12px;
+    border-radius: 6px;
+    background: #c40f0f;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: bold;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+
 
 
 

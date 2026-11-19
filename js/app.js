@@ -82,6 +82,14 @@ function createFavoriteButton(book) {
     return button;
 }
 
+function setBookCover(image, book) {
+    image.onerror = function() {
+        image.onerror = null;
+        image.src = book.fallbackCover;
+    };
+
+    image.src = book.cover;
+}
 
 function createBookCard(book) {
     const card = createElement("article", "book-card");
@@ -141,6 +149,11 @@ function createBookCard(book) {
         createFavoriteButton(book),
         footer
     );
+
+    if (book.price === 0) {
+        const freeBadge = createElement("span", "free-book-badge", "رایگان");
+        card.appendChild(freeBadge);
+    }
 
     card.append(coverLink, content);
     return card;
