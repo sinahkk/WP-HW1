@@ -255,7 +255,7 @@ window.bookCatalog = books.map(function (book) {
 });
 
 const coverFileNames = {
-    "pride-prejudice": "pride-prejudice.png",
+    "pride-prejudice": "pride-prejudice.jpg",
     "emma": "emma.jpg",
     "jane-eyre": "jane-eyre.jpg",
     "great-expectations": "great-expectations.jpg",
