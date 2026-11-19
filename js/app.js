@@ -101,7 +101,7 @@ function createBookCard(book) {
     );
 
     const cover = createElement("img", "book-cover");
-    cover.src = book.cover;
+    setBookCover(cover, book);
     cover.alt = "جلد کتاب " + book.title;
     cover.loading = "lazy";
     coverLink.appendChild(cover);
@@ -337,7 +337,7 @@ function renderBanner() {
 
             if (book) {
                 const image = createElement("img");
-                image.src = book.cover;
+                setBookCover(image, book);
                 image.alt = "جلد کتاب " + book.title;
                 art.appendChild(image);
             }
@@ -766,7 +766,7 @@ function renderBookDetail() {
     const layout = createElement("article", "book-detail");
 
     const cover = createElement("img", "detail-cover");
-    cover.src = book.cover;
+    setBookCover(cover, book);
     cover.alt = "جلد کتاب " + book.title;
 
     const info = createElement("div", "detail-info");
@@ -1168,7 +1168,7 @@ function renderLibrary() {
         app.appendChild(createBookGrid(downloaded));
     } else {
         showEmpty(
-            "هنوز کتابی دریافت نکرده‌اید. امکان دریافت در مراحل بعد اضافه می‌شود."
+            "هنوز کتابی دریافت نکرده‌اید. برای دریافت کتاب، به صفحه جزئیات آن بروید."
         );
     }
 }
